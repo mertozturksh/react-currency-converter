@@ -1,6 +1,7 @@
 import { useEffect, useReducer } from "react";
 import Dropdown from "./Dropdown";
 import { HiArrowsRightLeft } from "react-icons/hi2";
+import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 import { fetchCurrencies, fetchRate } from "../api";
 import { convertReducer } from "../reducers/convertReducer";
@@ -22,8 +23,11 @@ const CurrencyConverter = () => {
 
   useEffect(() => {
     fetchData();
-    handleConvert();
   }, []);
+
+  useEffect(() => {
+    handleConvert();
+  }, [state.fromCurrency, state.toCurrency]);
 
   const fetchData = async () => {
     dispatch({ type: 'FETCH_START' });
@@ -37,6 +41,8 @@ const CurrencyConverter = () => {
 
   const handleConvert = async () => {
     dispatch({ type: 'FETCH_START' });
+
+    await new Promise((resolve) => setTimeout(resolve, 750));
     try {
       const data = await fetchRate(state.fromCurrency, state.toCurrency, state.amount);
       dispatch({ type: 'FETCH_CONVERT_SUCCESS', payload: data.data.rates[state.toCurrency] + ' ' + state.toCurrency });
@@ -45,15 +51,15 @@ const CurrencyConverter = () => {
     }
   };
 
-  const handleSwapCurrencies = async () => {
+  const handleSwapCurrencies = () => {
     dispatch({ type: 'SWAP' });
-    // await handleConvert();
   };
 
-  const handleChangeCurrency = async (type, currency) => {
+  const handleChangeCurrency = (type, currency) => {
     dispatch({ type: type, currency: currency });
-    // await handleConvert();
   };
+
+
 
   return (
     <div className="max-w-xl mx-auto my-10 p-5 bg-white rounded-lg shadow-md">
@@ -93,14 +99,19 @@ const CurrencyConverter = () => {
         <div className="flex justify-center -mb-5 sm:mb-0">
           <button
             onClick={handleConvert}
+            disabled={state.loading}
             className={`px-5 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
-          ${state.loading ? "animate-pulse" : ""}`}
+              ${state.loading ? "animate-pulse cursor-not-allowed" : ""}`}
           >
-            Convert
+            {state.loading ? (
+              <AiOutlineLoading3Quarters className="animate-spin h-5 w-5" />
+            ) : (
+              "Convert"
+            )}
           </button>
         </div>
 
-        <Input title={'Converted'} value={state.rate} disabled />
+        <Input title={'Converted'} value={state.rate} disabled loading={state.loading} />
 
       </div>
     </div>
